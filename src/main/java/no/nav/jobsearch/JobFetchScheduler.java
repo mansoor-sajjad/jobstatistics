@@ -12,8 +12,8 @@ public class JobFetchScheduler {
         this.feedService = feedService;
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
-    public void fetchDaily() {
-        feedService.fetchAndSaveJobs();
+    @Scheduled(cron = "0 */3 * * * *")
+    public void fetchAllITJobs() {
+        feedService.fetchAndSaveAllITJobs();
     }
 }
