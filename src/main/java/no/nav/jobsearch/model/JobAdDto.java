@@ -9,7 +9,7 @@ import java.time.ZonedDateTime;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class JobAdDTO {
+public class JobAdDto {
     private String uuid;
     private String title;
     private String description;

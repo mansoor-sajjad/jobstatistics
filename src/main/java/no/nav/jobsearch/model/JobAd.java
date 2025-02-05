@@ -27,7 +27,7 @@ public class JobAd {
 
     public JobAd() {}
 
-    public JobAd(JobAdDTO dto) {
+    public JobAd(JobAdDto dto) {
         this.uuid = dto.getUuid();
         this.title = dto.getTitle();
         this.description = dto.getDescription();
@@ -36,7 +36,7 @@ public class JobAd {
         this.expires = parseToLocalDateTime(dto.getExpires());
     }
 
-    public void updateFromDto(JobAdDTO dto) {
+    public void updateFromDto(JobAdDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
         this.published = parseToLocalDateTime(dto.getPublished());

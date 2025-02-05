@@ -9,7 +9,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class JobFeedResponse {
 
-    private List<JobAdDTO> content;
+    private List<JobAdDto> content;
     private int totalElements;
     private int pageNumber;
     private int pageSize;
