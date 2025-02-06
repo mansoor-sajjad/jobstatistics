@@ -30,6 +30,12 @@ public class FeedService {
     this.jobFetcher = jobFetcher;
   }
 
+  /**
+   * Fetches and updates all IT jobs.
+   * Removes expired and unpublished ads.
+   *
+   * @param now The current date and time
+   */
   @Transactional
   public void fetchAndUpdateAllITJobs(LocalDateTime now) {
     LocalDateTime oldestPublishedDate = now.minusMonths(6);
@@ -46,6 +52,11 @@ public class FeedService {
     removeExpiredAndUnpublishedAds(now, activeAdUuids);
   }
 
+  /**
+   * Fetches and saves updated jobs.
+   *
+   * @param now The current date and time
+   */
   @Transactional
   public void fetchAndSaveUpdatedJobs(LocalDateTime now) {
     jobAdRepository
@@ -60,6 +71,11 @@ public class FeedService {
       );
   }
 
+  /**
+   * Processes and stores jobs in batches.
+   *
+   * @param jobAds The list of job ads to process and store
+   */
   void processAndStoreJobsInBatches(List<JobAdDto> jobAds) {
     logger.info("Processing and storing {} jobs in batches.", jobAds.size());
 
@@ -89,6 +105,12 @@ public class FeedService {
     }
   }
 
+  /**
+   * Removes expired and unpublished ads.
+   *
+   * @param now The current date and time
+   * @param activeAdUuids The list of active ad UUIDs
+   */
   void removeExpiredAndUnpublishedAds(
     LocalDateTime now,
     List<String> activeAdUuids
@@ -99,6 +121,7 @@ public class FeedService {
       if (
         ad.getExpires().isBefore(now) || !activeAdUuids.contains(ad.getUuid())
       ) {
+        logger.info("Removing job ad with UUID: {}", ad.getUuid());
         jobAdRepository.delete(ad);
       }
     }

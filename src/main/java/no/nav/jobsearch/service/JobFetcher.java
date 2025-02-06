@@ -1,8 +1,13 @@
 package no.nav.jobsearch.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
+
 import no.nav.jobsearch.model.JobAdDto;
 import no.nav.jobsearch.model.JobFeedResponse;
 import org.slf4j.Logger;
@@ -31,8 +36,8 @@ public class JobFetcher {
   @Value("${api.token}")
   private String token;
 
-  @Value("${feed.api.url}?category=IT&size=" + BATCH_SIZE)
-  private String apiUrlForIT;
+  @Value("${feed.api.url}")
+  private String apiUrl;
 
   private final RestTemplate restTemplate;
 
@@ -40,25 +45,28 @@ public class JobFetcher {
     this.restTemplate = restTemplate;
   }
 
+  /**
+   * Fetches jobs from the API and processes them in batches.
+   * The method fetches jobs from the API until no more jobs are found
+   * or the newest updated date is before the oldest updated date.
+   *
+   * @param now The current date and time
+   * @param oldestUpdatedDate The oldest updated date to fetch jobs from
+   * @param newestUpdatedDate The newest updated date to fetch jobs from
+   * @param dataBatchHandler The handler for processing the fetched data batch
+   */
   public void fetchJobs(
     LocalDateTime now,
     LocalDateTime oldestUpdatedDate,
     LocalDateTime newestUpdatedDate,
     Consumer<List<JobAdDto>> dataBatchHandler
   ) {
-    while (true) {
+    while (newestUpdatedDate == null || newestUpdatedDate.isAfter(oldestUpdatedDate)) {
       String url = buildApiUrl(now, oldestUpdatedDate, newestUpdatedDate);
-
       ResponseEntity<JobFeedResponse> response = fetchDataWithRetry(url);
 
-      if (
-        !response.getStatusCode().is2xxSuccessful() ||
-        response.getBody() == null
-      ) {
-        logger.error(
-          "Failed to fetch data from API or received invalid response for URL: {}",
-          url
-        );
+      if (!isValidResponse(response)) {
+        logger.error("Failed to fetch data from API or received invalid response for URL: {}", url);
         break;
       }
 
@@ -66,59 +74,45 @@ public class JobFetcher {
       newestUpdatedDate = handleResponse(jobFeedResponse, dataBatchHandler);
 
       if (newestUpdatedDate == null) {
-        logger.info(
-          "No more jobs found or invalid response. Stopping fetch process."
-        );
+        logger.info("No more jobs found or invalid response. Stopping fetch process.");
         break;
       }
 
       int totalPages = jobFeedResponse.getTotalPages();
-      for (
-        int pageNumber = jobFeedResponse.getPageNumber() + 1;
-        pageNumber < totalPages;
-        pageNumber++
-      ) {
-        String pageUrl = url + "&page=" + pageNumber;
-        ResponseEntity<JobFeedResponse> pageResponse = fetchDataWithRetry(
-          pageUrl
-        );
+      int currentPage = jobFeedResponse.getPageNumber();
 
-        if (
-          !pageResponse.getStatusCode().is2xxSuccessful() ||
-          pageResponse.getBody() == null
-        ) {
-          logger.warn(
-            "Failed to fetch data for page {} or received invalid response. Skipping page.",
-            pageNumber
-          );
-          continue;
-        }
+      newestUpdatedDate = IntStream.range(currentPage + 1, totalPages)
+              .mapToObj(pageNumber -> {
+                return fetchDataWithRetry(url + "&page=" + pageNumber);
+              })
+              .filter(this::isValidResponse)
+              .map(ResponseEntity::getBody)
+              .map(pageJobFeedResponse -> handleResponse(pageJobFeedResponse, dataBatchHandler))
+              .takeWhile(Objects::nonNull)
+              .reduce((a, b) -> b) // Get the last non-null newestUpdatedDate
+              .orElse(null);
 
-        JobFeedResponse pageJobFeedResponse = pageResponse.getBody();
-        newestUpdatedDate =
-          handleResponse(pageJobFeedResponse, dataBatchHandler);
-
-        if (newestUpdatedDate == null) {
-          logger.info(
-            "No more jobs found on page {}. Stopping fetch process.",
-            pageNumber
-          );
-          break;
-        }
-      }
-
-      if (
-        newestUpdatedDate == null ||
-        !newestUpdatedDate.isAfter(oldestUpdatedDate)
-      ) {
-        logger.info(
-          "No more jobs found within the date range. Stopping fetch process."
-        );
+      if (newestUpdatedDate == null || !newestUpdatedDate.atZone(ZoneOffset.UTC).isAfter(oldestUpdatedDate.atZone(ZoneOffset.UTC))) {
+        logger.info("No more jobs found within the date range. Stopping fetch process.");
         break;
       }
     }
   }
 
+  private boolean isValidResponse(ResponseEntity<JobFeedResponse> response) {
+    return response.getStatusCode().is2xxSuccessful() && response.getBody() != null;
+  }
+
+  /**
+   * Validates the response and processes the data.
+   * If the response is valid and contains data, the data is processed by the data handler.
+   * The method returns the newest updated date from the response, which is the last updated date in the data.
+   * If the response is invalid or does not contain data, the method returns null.
+   *
+   * @param jobFeedResponse The response from the API
+   * @param dataHandler The handler for processing the fetched data
+   * @return The newest updated date from the response, or null if the response is invalid or does not contain data
+   */
   private LocalDateTime handleResponse(
     JobFeedResponse jobFeedResponse,
     Consumer<List<JobAdDto>> dataHandler
@@ -137,25 +131,38 @@ public class JobFetcher {
     return null;
   }
 
+  /**
+   * Builds the API URL with the date range appended.
+   *
+   * @param now The current date and time
+   * @param oldestUpdatedDate The oldest updated date
+   * @param newestUpdatedDate The newest updated date
+   * @return The API URL with the date range appended
+   */
   private String buildApiUrl(
     LocalDateTime now,
     LocalDateTime oldestUpdatedDate,
     LocalDateTime newestUpdatedDate
   ) {
-    return (
-      apiUrlForIT +
-      "&published=(" +
-      now.minusMonths(6) +
-      "," +
-      now +
-      ")&updated=(" +
-      oldestUpdatedDate +
-      "," +
-      newestUpdatedDate +
-      ")"
-    );
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+    String category = "IT";
+    String size = String.valueOf(BATCH_SIZE);
+    String published = "(" + now.minusMonths(6).format(formatter) + "," + now.format(formatter) + ")";
+    String updated = "(" + oldestUpdatedDate.format(formatter) + "," + newestUpdatedDate.format(formatter) + ")";
+
+    return apiUrl + "?category=" + category + "&size=" + size + "&published=" + published + "&updated=" + updated;
   }
 
+  /**
+   * Fetches data from the API with retry logic.
+   * The method retries fetching data from the API if a ResourceAccessException or HttpClientErrorException occurs.
+   * The method retries fetching data up to the maximum number of attempts defined by the configuration.
+   * The method uses exponential backoff with a multiplier to delay retries.
+   *
+   * @param url The URL to fetch data from
+   * @return The response entity containing the fetched data
+   */
   @Retryable(
     retryFor = {
       ResourceAccessException.class, HttpClientErrorException.class,
@@ -195,6 +202,11 @@ public class JobFetcher {
     }
   }
 
+  /**
+   * Creates an HTTP entity with the authorization header.
+   *
+   * @return The HTTP entity with the authorization header
+   */
   private HttpEntity<String> getHttpEntity() {
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);

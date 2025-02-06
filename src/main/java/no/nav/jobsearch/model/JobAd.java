@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.Getter;
 
+/**
+ * Represents a job ad.
+ * Instances of this class are persisted in the database.
+ */
 @Entity
 @Data
 public class JobAd {

@@ -8,8 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Repository for JobAd entities.
+ */
 @Repository
 public interface JobAdRepository extends CrudRepository<JobAd, String> {
   @Query(
@@ -29,6 +31,6 @@ public interface JobAdRepository extends CrudRepository<JobAd, String> {
 
   Optional<JobAd> findByUuid(String uuid);
 
-  @Query("SELECT MAX(j.published) FROM JobAd j")
+  @Query("SELECT MAX(j.updated) FROM JobAd j")
   Optional<LocalDateTime> findNewestUpdatedDate();
 }
