@@ -25,4 +25,6 @@ public class JobFeedResponse {
     this.pageNumber = pageNumber;
     this.totalPages = totalPages;
   }
+
+  public JobFeedResponse() {}
 }

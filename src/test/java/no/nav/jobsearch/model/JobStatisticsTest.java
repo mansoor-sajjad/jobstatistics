@@ -16,7 +16,8 @@ class JobStatisticsTest {
     JobStatistics stats = JobStatistics.of(record);
 
     assertThat(stats).isNotNull();
-    assertThat(stats.weekStart()).isEqualTo(now);
+    assertThat(stats.weekStart())
+      .isEqualTo(LocalDateTime.of(2024, 1, 29, 0, 0));
     assertThat(stats.kotlinCount()).isEqualTo(5L);
     assertThat(stats.javaCount()).isEqualTo(10L);
     assertThat(stats.totalCount()).isEqualTo(20L);
