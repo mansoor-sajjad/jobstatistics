@@ -28,6 +28,9 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<prettier-java.version>2.1.0</prettier-java.version>
+		<prettier-maven-plugin.version>0.21</prettier-maven-plugin.version>
+		<plugin.prettier.goal>write</plugin.prettier.goal>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -75,6 +78,22 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>com.hubspot.maven.plugins</groupId>
+				<artifactId>prettier-maven-plugin</artifactId>
+				<version>${prettier-maven-plugin.version}</version>
+				<configuration>
+					<prettierJavaVersion>${prettier-java.version}</prettierJavaVersion>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>${plugin.prettier.goal}</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

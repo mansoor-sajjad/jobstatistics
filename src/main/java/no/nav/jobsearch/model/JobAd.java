@@ -1,53 +1,47 @@
 package no.nav.jobsearch.model;
 
+import static no.nav.jobsearch.Util.parseToLocalDateTime;
+
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.Getter;
-
-import java.time.ZoneId;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 
 @Entity
 @Data
 public class JobAd {
 
-    @Getter
-    @Id
-    private String uuid;
-    private String title;
+  @Getter
+  @Id
+  private String uuid;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+  private String title;
 
-    private LocalDateTime published;
-    private LocalDateTime updated;
-    @Getter
-    private LocalDateTime expires;
+  @Column(columnDefinition = "TEXT")
+  private String description;
 
-    public JobAd() {}
+  private LocalDateTime published;
+  private LocalDateTime updated;
 
-    public JobAd(JobAdDto dto) {
-        this.uuid = dto.getUuid();
-        this.title = dto.getTitle();
-        this.description = dto.getDescription();
-        this.published = parseToLocalDateTime(dto.getPublished());
-        this.updated = parseToLocalDateTime(dto.getUpdated());
-        this.expires = parseToLocalDateTime(dto.getExpires());
-    }
+  @Getter
+  private LocalDateTime expires;
 
-    public void updateFromDto(JobAdDto dto) {
-        this.title = dto.getTitle();
-        this.description = dto.getDescription();
-        this.published = parseToLocalDateTime(dto.getPublished());
-        this.updated = parseToLocalDateTime(dto.getUpdated());
-        this.expires = parseToLocalDateTime(dto.getExpires());
-    }
+  public JobAd() {}
 
-    private LocalDateTime parseToLocalDateTime(String dateTimeString) {
-        // Parse as Instant (UTC time)
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateTimeString);
-        // Convert to LocalDateTime in the system's default time zone
-        return zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-    }
+  public JobAd(JobAdDto dto) {
+    this.uuid = dto.getUuid();
+    this.title = dto.getTitle();
+    this.description = dto.getDescription();
+    this.published = parseToLocalDateTime(dto.getPublished());
+    this.updated = parseToLocalDateTime(dto.getUpdated());
+    this.expires = parseToLocalDateTime(dto.getExpires());
+  }
+
+  public void updateFromDto(JobAdDto dto) {
+    this.title = dto.getTitle();
+    this.description = dto.getDescription();
+    this.published = parseToLocalDateTime(dto.getPublished());
+    this.updated = parseToLocalDateTime(dto.getUpdated());
+    this.expires = parseToLocalDateTime(dto.getExpires());
+  }
 }
