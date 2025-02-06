@@ -5,10 +5,10 @@ services:
     restart: always
     environment:
       POSTGRES_DB: jobdb
-      POSTGRES_USER: pg1
-      POSTGRES_PASSWORD: pg1
+      POSTGRES_USER: jobdb
+      POSTGRES_PASSWORD: jobdb
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

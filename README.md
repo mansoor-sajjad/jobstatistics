@@ -1,27 +1,59 @@
-# Getting Started
+## Job Statistics Service
+The purpose of this application is to provide job statistics for Java vs Kotlin positions, updated weekly, over the past 6 months.
 
-### Reference Documentation
-For further reference, please consider the following sections:
+This application retrieves its data from the NAV Ads Public API. The API offers published information on available jobs in Norway and details about employers. For more documentation and to obtain the public API key, please visit our GitHub page: PAM Public Feed.
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.4.2/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/3.4.2/maven-plugin/build-image.html)
-* [Spring Web](https://docs.spring.io/spring-boot/3.4.2/reference/web/servlet.html)
-* [Spring Data JPA](https://docs.spring.io/spring-boot/3.4.2/reference/data/sql.html#data.sql.jpa-and-spring-data)
-* [Quartz Scheduler](https://docs.spring.io/spring-boot/3.4.2/reference/io/quartz.html)
+### Technologies
+This application is built using Spring Boot and runs on Java 21. It uses maven for dependency management.
+It uses a database to store job listings.
 
-### Guides
-The following guides illustrate how to use some features concretely:
 
-* [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-* [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-* [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
-* [Accessing Data with JPA](https://spring.io/guides/gs/accessing-data-jpa/)
+### Basic Architecture
+The basic architecture of the application is illustrated below:
 
-### Maven Parent overrides
+![Architecture](diagrams/jobstatistics_basic.png)
 
-Due to Maven's design, elements are inherited from the parent POM to the project POM.
-While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
-To prevent this, the project POM contains empty overrides for these elements.
-If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+This diagram illustrates the basic data flow for the job statistics service.
+
+### Data Flow
+1.	The client sends a request to the JobStatistics service.
+2.	The JobStatistics service fetches job data from the pam-public-feed.
+3.	The service processes the data and responds to the client with statistics comparing Kotlin and Java job listings.
+
+### Job Statistics Service Architecture
+The architecture of the Job Statistics Service is illustrated below:
+
+![Architecture](diagrams/jobstatisticsapp.png)
+
+#### The Cronjobs
+The application includes a cron job that updates the job ads database with the latest listings from the NAV Ads Public API.\
+The cron job runs at application startup and once every day at midnight for a full database refresh. Additionally, the cron job runs every 10 minutes to update the database with the most recent job ads.
+
+#### The Rest API
+The application also provides a REST API that delivers job statistics comparing Java and Kotlin positions over the past 6 months.
+
+
+### Getting Started
+The repository includes a Docker Compose file that can be used to build and run a Docker image for the PostgreSQL database.
+
+To build and start the database container, run the following command in the root directory of the repository:
+```shell
+docker-compose up -d
+```
+
+To run the application locally, execute the following command in the root directory of the repository:
+```shell
+mvn spring-boot:run
+```
+
+The application will update the database with IT job ads from the past 6 months upon startup.
+
+### API Endpoints
+
+The application will be available at http://localhost:8080.
+
+Use the following endpoint to retrieve the job statistics:
+
+http://localhost:8080/stats/kotlin-vs-java
+
 
