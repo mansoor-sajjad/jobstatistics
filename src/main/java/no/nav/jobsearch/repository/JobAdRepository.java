@@ -16,16 +16,17 @@ import org.springframework.stereotype.Repository;
 public interface JobAdRepository extends CrudRepository<JobAd, String> {
   @Query(
     """
-    SELECT FUNCTION('DATE_TRUNC', 'week', j.published) AS week,
-           SUM(CASE WHEN LOWER(j.description) LIKE '%kotlin%' THEN 1 ELSE 0 END) AS kotlinCount,
-           SUM(CASE WHEN LOWER(j.description) LIKE '%java%' THEN 1 ELSE 0 END) AS javaCount
+    SELECT j.published,
+           SUM(CASE WHEN LOWER(j.description) LIKE '%kotlin%' THEN 1 ELSE 0 END) as kotlinCount,
+           SUM(CASE WHEN LOWER(j.description) LIKE '%java%' THEN 1 ELSE 0 END) as javaCount,
+           COUNT(j) as totalCount
     FROM JobAd j
     WHERE j.published >= :sixMonthsAgo
-    GROUP BY week
-    ORDER BY week
+    GROUP BY j.published
+    ORDER BY j.published
     """
   )
-  List<Object[]> getKotlinVsJavaStats(
+  List<Object[]> getKotlinVsJavaStats2(
     @Param("sixMonthsAgo") LocalDateTime sixMonthsAgo
   );
 

@@ -2,8 +2,7 @@ package no.nav.jobsearch;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import no.nav.jobsearch.model.JobStatistics;
 import no.nav.jobsearch.repository.JobAdRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,21 +28,10 @@ public class StatsController {
    * @return A list of maps containing the week, the number of Kotlin job ads and the number of Java job ads
    */
   @GetMapping("/kotlin-vs-java")
-  public List<Map<String, Object>> getKotlinVsJavaStats() {
+  public List<JobStatistics> getKotlinVsJavaStats() {
     LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
-    return jobAdRepository
-      .getKotlinVsJavaStats(sixMonthsAgo)
-      .stream()
-      .map(record ->
-        Map.of(
-          "week",
-          record[0],
-          "kotlinCount",
-          record[1],
-          "javaCount",
-          record[2]
-        )
-      )
-      .collect(Collectors.toList());
+    return JobStatistics.of(
+      jobAdRepository.getKotlinVsJavaStats2(sixMonthsAgo)
+    );
   }
 }

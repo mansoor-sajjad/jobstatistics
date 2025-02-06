@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>no.nav</groupId>
-	<artifactId>jobsearch</artifactId>
+	<artifactId>jobstatistics</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>jobsearch</name>
 	<description>Kodeoppgave i forbindelse med oppdrag i Team EESSI Nav</description>
@@ -71,7 +71,7 @@
 		</dependency>
 
 
-	</dependencies>
+    </dependencies>
 
 	<build>
 		<plugins>

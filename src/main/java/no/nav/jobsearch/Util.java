@@ -20,10 +20,11 @@ public final class Util {
   public static LocalDateTime parseToLocalDateTime(String dateTimeString) {
     return Optional
       .ofNullable(dateTimeString)
-      .map(dateTime -> ZonedDateTime
-        .parse(dateTime)
-        .withZoneSameInstant(ZoneId.of("UTC"))
-        .toLocalDateTime()
+      .map(dateTime ->
+        ZonedDateTime
+          .parse(dateTime)
+          .withZoneSameInstant(ZoneId.of("UTC"))
+          .toLocalDateTime()
       )
       .orElse(null);
   }

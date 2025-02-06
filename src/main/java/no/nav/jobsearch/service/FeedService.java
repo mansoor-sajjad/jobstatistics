@@ -1,7 +1,5 @@
 package no.nav.jobsearch.service;
 
-import static no.nav.jobsearch.service.JobFetcher.BATCH_SIZE;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +9,7 @@ import no.nav.jobsearch.model.JobAdDto;
 import no.nav.jobsearch.repository.JobAdRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +19,9 @@ public class FeedService {
   private static final Logger logger = LoggerFactory.getLogger(
     FeedService.class
   );
+
+  @Value("${feed.batch.size:100}")
+  private int batchSize;
 
   private final JobAdRepository jobAdRepository;
 
@@ -93,7 +95,7 @@ public class FeedService {
       }
 
       // If batch reaches defined size, save and clear it
-      if (batch.size() >= BATCH_SIZE) {
+      if (batch.size() >= batchSize) {
         jobAdRepository.saveAll(batch);
         batch.clear();
       }
